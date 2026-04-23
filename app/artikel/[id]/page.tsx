@@ -1,21 +1,62 @@
 "use client";
-import { use } from "react";
+import { use, useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 import Navbar from "../../components/Navbar";
 import Footer from "../../components/Footer";
 import { ARTICLES } from "../../lib/data";
+import { useAuth } from "../../context/AuthContext";
+import { createClient } from "../../lib/supabase";
 
 export default function ArtikelDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const article = ARTICLES.find(a => a.id === Number(id));
   if (!article) notFound();
 
+  const { user } = useAuth();
+  const [bookmarked, setBookmarked] = useState(false);
+  const [bookmarkLoading, setBookmarkLoading] = useState(false);
+
   const related = ARTICLES.filter(a => a.id !== article.id && a.category === article.category).slice(0, 3);
   const others = related.length < 3
     ? [...related, ...ARTICLES.filter(a => a.id !== article.id && a.category !== article.category).slice(0, 3 - related.length)]
     : related;
+
+  // Load bookmark status
+  useEffect(() => {
+    if (!user) { setBookmarked(false); return; }
+    const supabase = createClient();
+    supabase
+      .from("artikel_bookmarks")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("artikel_id", article.id)
+      .maybeSingle()
+      .then(({ data }) => setBookmarked(!!data));
+  }, [user, article.id]);
+
+  const toggleBookmark = async () => {
+    if (!user) {
+      window.location.href = "/login";
+      return;
+    }
+    setBookmarkLoading(true);
+    const supabase = createClient();
+    if (bookmarked) {
+      await supabase
+        .from("artikel_bookmarks")
+        .delete()
+        .eq("user_id", user.id)
+        .eq("artikel_id", article.id);
+      setBookmarked(false);
+    } else {
+      await supabase
+        .from("artikel_bookmarks")
+        .insert({ user_id: user.id, artikel_id: article.id });
+      setBookmarked(true);
+    }
+    setBookmarkLoading(false);
+  };
 
   const renderContent = (text: string) => {
     return text.split("\n\n").map((block, i) => {
@@ -75,10 +116,28 @@ export default function ArtikelDetail({ params }: { params: Promise<{ id: string
             <span style={{ color: article.catColor, fontWeight: 600 }}>{article.category}</span>
           </div>
 
-          {/* Badges */}
-          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-            <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 8, background: `color-mix(in srgb, ${article.catColor} 15%, rgba(0,0,0,0.4))`, border: `1px solid ${article.catColor}50`, color: article.catColor }}>{article.category}</span>
-            <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>⏱ {article.readTime} baca</span>
+          {/* Badges + Bookmark button */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 10 }}>
+            <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+              <span style={{ fontSize: 11, fontWeight: 700, padding: "4px 12px", borderRadius: 8, background: `color-mix(in srgb, ${article.catColor} 15%, rgba(0,0,0,0.4))`, border: `1px solid ${article.catColor}50`, color: article.catColor }}>{article.category}</span>
+              <span style={{ fontSize: 11, padding: "4px 12px", borderRadius: 8, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)" }}>⏱ {article.readTime} baca</span>
+            </div>
+            <button
+              onClick={toggleBookmark}
+              disabled={bookmarkLoading}
+              style={{
+                display: "flex", alignItems: "center", gap: 6,
+                padding: "7px 16px", borderRadius: 9, fontSize: 12, fontWeight: 700,
+                cursor: bookmarkLoading ? "default" : "pointer",
+                background: bookmarked ? `color-mix(in srgb, ${article.catColor} 15%, transparent)` : "rgba(255,255,255,0.06)",
+                border: bookmarked ? `1px solid ${article.catColor}60` : "1px solid rgba(255,255,255,0.12)",
+                color: bookmarked ? article.catColor : "rgba(255,255,255,0.5)",
+                transition: "all .2s",
+                opacity: bookmarkLoading ? 0.6 : 1,
+              }}
+            >
+              {bookmarked ? "🔖 Disimpan" : "🔖 Simpan"}
+            </button>
           </div>
 
           {/* Title */}
