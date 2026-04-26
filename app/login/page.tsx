@@ -2,7 +2,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Navbar from "../components/Navbar";
 import { createClient } from "../lib/supabase";
 
 export default function LoginPage() {
@@ -27,14 +26,9 @@ export default function LoginPage() {
       else setError(authError.message);
       return;
     }
-    // Check role and redirect accordingly
     if (signInData.user) {
       const { data: profile } = await supabase.from("profiles").select("role").eq("id", signInData.user.id).single();
-      if (profile?.role === "admin") {
-        router.push("/admin");
-      } else {
-        router.push("/edukasi");
-      }
+      router.push(profile?.role === "admin" ? "/admin" : "/edukasi");
       router.refresh();
     }
   };
@@ -47,112 +41,138 @@ export default function LoginPage() {
     });
   };
 
+  const A = "#f59e0b";
+
   return (
-    <>
-      <Navbar />
-      <main style={{ minHeight: "100vh", paddingTop: 56, display: "flex", position: "relative", overflow: "hidden" }}>
-        {/* Left panel */}
-        <div className="hidden lg:flex" style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: "60px 48px", borderRight: "1px solid rgba(255,255,255,0.05)", position: "relative" }}>
-          <div style={{ position: "absolute", width: 420, height: 420, borderRadius: "50%", background: "radial-gradient(circle, rgba(245,158,11,0.08) 0%, transparent 70%)", top: "50%", left: "50%", transform: "translate(-50%,-50%)", pointerEvents: "none" }} />
-          <div style={{ position: "relative", zIndex: 1, maxWidth: 380 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 40 }}>
-              <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg, var(--color-primary,#f59e0b), #f97316)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 20, color: "#000" }}>LH</div>
-              <div>
-                <div style={{ fontWeight: 900, fontSize: 22, color: "var(--text-main,#e8eaf0)", lineHeight: 1 }}>Learn<span style={{ color: "var(--color-primary,#f59e0b)" }}>Hub</span></div>
-                <div style={{ fontSize: 11, opacity: 0.35, fontFamily: "monospace", color: "var(--text-main,#e8eaf0)" }}>Bitcoin Academy</div>
-              </div>
-            </div>
-            <h2 className="font-black" style={{ fontSize: "2.4rem", color: "var(--text-main,#e8eaf0)", lineHeight: 1.1, marginBottom: 16 }}>
-              Platform<br />Edukasi Bitcoin<br /><span style={{ color: "var(--color-primary,#f59e0b)" }}>Terlengkap</span>
-            </h2>
-            <p style={{ fontSize: 14, color: "var(--text-main,#e8eaf0)", opacity: 0.45, lineHeight: 1.75, marginBottom: 36 }}>
-              Bergabung dengan ribuan investor Indonesia yang belajar Bitcoin dari nol lewat konten berkualitas tinggi.
-            </p>
-            <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              {[
-                { icon: "📝", title: "50+ Artikel", desc: "Konten mendalam setiap minggu" },
-                { icon: "🎓", title: "12 Modul Belajar", desc: "Dari pemula ke mahir" },
-                { icon: "💱", title: "Konverter Realtime", desc: "BTC ↔ IDR setiap saat" },
-                { icon: "🔒", title: "Progress Tersimpan", desc: "Lanjutkan kapan saja" },
-              ].map(f => (
-                <div key={f.title} style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                  <div style={{ width: 38, height: 38, borderRadius: 10, background: "color-mix(in srgb, var(--color-primary,#f59e0b) 10%, transparent)", border: "1px solid color-mix(in srgb, var(--color-primary,#f59e0b) 20%, transparent)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, flexShrink: 0 }}>{f.icon}</div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "var(--text-main,#e8eaf0)" }}>{f.title}</div>
-                    <div style={{ fontSize: 11, opacity: 0.4, color: "var(--text-main,#e8eaf0)" }}>{f.desc}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+    <div style={{ minHeight: "100vh", display: "flex", background: "#080910", position: "relative", overflow: "hidden" }}>
+      <style>{`
+        @keyframes float { 0%,100% { transform: translateY(0px) } 50% { transform: translateY(-12px) } }
+        @keyframes fadeUp { from { opacity:0; transform:translateY(16px) } to { opacity:1; transform:none } }
+        @keyframes pulse { 0%,100% { opacity:.15 } 50% { opacity:.28 } }
+        .inp-wrap { display:flex; align-items:center; background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.09); border-radius:12px; transition:border .2s,background .2s; }
+        .inp-wrap:focus-within { border-color:${A}60; background:rgba(245,158,11,0.04); }
+        .inp-wrap input { flex:1; background:transparent; border:none; padding:13px 14px; font-size:14px; color:#e8eaf0; outline:none; }
+        .inp-wrap input::placeholder { opacity:.3; }
+        .inp-icon { padding:0 14px; font-size:15px; opacity:.3; flex-shrink:0; }
+        * { box-sizing:border-box; }
+      `}</style>
+
+      {/* Background blobs */}
+      <div style={{ position:"absolute", width:500, height:500, borderRadius:"50%", background:`radial-gradient(circle, ${A}12 0%, transparent 65%)`, top:-100, right:-100, pointerEvents:"none", animation:"pulse 4s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", width:300, height:300, borderRadius:"50%", background:"radial-gradient(circle, rgba(6,182,212,0.08) 0%, transparent 65%)", bottom:100, left:-50, pointerEvents:"none" }} />
+
+      {/* Left panel */}
+      <div style={{ flex:"0 0 480px", display:"flex", flexDirection:"column", justifyContent:"center", padding:"60px 52px", borderRight:"1px solid rgba(255,255,255,0.05)", position:"relative" }} className="hidden lg:flex">
+        {/* Logo */}
+        <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:52 }}>
+          <div style={{ width:44, height:44, borderRadius:13, background:`linear-gradient(135deg, ${A}, #f97316)`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:18, color:"#000", boxShadow:`0 8px 24px ${A}40` }}>LH</div>
+          <div>
+            <div style={{ fontWeight:900, fontSize:20, color:"#e8eaf0", letterSpacing:"-0.3px" }}>Learn<span style={{ color:A }}>Hub</span></div>
+            <div style={{ fontSize:10, opacity:.3, letterSpacing:"0.14em", color:"#e8eaf0", fontFamily:"monospace" }}>BITCOIN ACADEMY</div>
           </div>
         </div>
 
-        {/* Right panel — form */}
-        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "60px 24px", maxWidth: "100%", minWidth: 0 }}>
-          <div style={{ width: "100%", maxWidth: 400 }}>
-            <div style={{ textAlign: "center", marginBottom: 28 }} className="lg:hidden">
-              <div style={{ width: 48, height: 48, borderRadius: 13, margin: "0 auto 12px", background: "linear-gradient(135deg, var(--color-primary,#f59e0b), #f97316)", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 900, fontSize: 18, color: "#000" }}>LH</div>
-              <h1 className="font-black" style={{ fontSize: "1.6rem", color: "var(--text-main,#e8eaf0)" }}>Masuk ke <span style={{ color: "var(--color-primary,#f59e0b)" }}>LearnHub</span></h1>
+        <h2 style={{ fontSize:"2.6rem", fontWeight:900, color:"#e8eaf0", lineHeight:1.1, marginBottom:16, letterSpacing:"-1px" }}>
+          Belajar Bitcoin<br /><span style={{ color:A }}>dari Nol</span><br />ke Mahir
+        </h2>
+        <p style={{ fontSize:14, color:"#e8eaf0", opacity:.45, lineHeight:1.8, marginBottom:40 }}>
+          Platform edukasi Bitcoin terlengkap untuk investor Indonesia.
+        </p>
+
+        <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
+          {[
+            { icon:"🎓", label:"6 Modul Terstruktur", sub:"Dari dasar sampai analisis teknikal" },
+            { icon:"📝", label:"Artikel Mendalam", sub:"Ditulis oleh pakar kripto Indonesia" },
+            { icon:"📊", label:"Progres Tersimpan", sub:"Lanjutkan kapan saja, di mana saja" },
+            { icon:"💱", label:"Konverter Realtime", sub:"BTC ↔ IDR langsung di dashboard" },
+          ].map((f) => (
+            <div key={f.label} style={{ display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ width:42, height:42, borderRadius:12, background:`${A}12`, border:`1px solid ${A}20`, display:"flex", alignItems:"center", justifyContent:"center", fontSize:18, flexShrink:0 }}>{f.icon}</div>
+              <div>
+                <div style={{ fontSize:13, fontWeight:700, color:"#e8eaf0" }}>{f.label}</div>
+                <div style={{ fontSize:11, opacity:.4, color:"#e8eaf0" }}>{f.sub}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Floating card decoration */}
+        <div style={{ position:"absolute", bottom:60, right:-1, transform:"translateX(50%)", width:180, padding:"16px 18px", background:"rgba(15,16,26,0.95)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:16, boxShadow:"0 24px 48px rgba(0,0,0,0.5)", animation:"float 4s ease-in-out infinite" }}>
+          <div style={{ fontSize:10, opacity:.35, color:"#e8eaf0", marginBottom:6, fontFamily:"monospace" }}>PROGRESS KAMU</div>
+          <div style={{ fontSize:20, fontWeight:900, color:A, marginBottom:8 }}>68%</div>
+          <div style={{ height:4, borderRadius:99, background:"rgba(255,255,255,0.06)", overflow:"hidden" }}>
+            <div style={{ height:"100%", width:"68%", borderRadius:99, background:`linear-gradient(to right, ${A}, #f97316)` }} />
+          </div>
+          <div style={{ fontSize:10, opacity:.4, color:"#e8eaf0", marginTop:6 }}>Modul 4 dari 6</div>
+        </div>
+      </div>
+
+      {/* Right panel — form */}
+      <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"40px 24px" }}>
+        <div style={{ width:"100%", maxWidth:420, animation:"fadeUp .4s ease both" }}>
+
+          {/* Mobile logo */}
+          <div style={{ textAlign:"center", marginBottom:32 }} className="lg:hidden">
+            <div style={{ width:52, height:52, borderRadius:15, margin:"0 auto 14px", background:`linear-gradient(135deg, ${A}, #f97316)`, display:"flex", alignItems:"center", justifyContent:"center", fontWeight:900, fontSize:20, color:"#000", boxShadow:`0 8px 24px ${A}40` }}>LH</div>
+            <h1 style={{ fontSize:"1.7rem", fontWeight:900, color:"#e8eaf0", margin:0 }}>Masuk ke <span style={{ color:A }}>LearnHub</span></h1>
+          </div>
+
+          <div className="hidden lg:block" style={{ marginBottom:32 }}>
+            <h2 style={{ fontSize:"1.8rem", fontWeight:900, color:"#e8eaf0", margin:"0 0 6px", letterSpacing:"-0.5px" }}>Selamat Datang 👋</h2>
+            <p style={{ fontSize:13, color:"#e8eaf0", opacity:.4, margin:0 }}>Masuk untuk lanjutkan perjalanan belajarmu.</p>
+          </div>
+
+          {/* Google */}
+          <button onClick={handleGoogle} style={{ width:"100%", padding:"12px 16px", borderRadius:12, fontSize:13, fontWeight:600, cursor:"pointer", display:"flex", alignItems:"center", justifyContent:"center", gap:10, background:"rgba(255,255,255,0.05)", border:"1.5px solid rgba(255,255,255,0.1)", color:"#e8eaf0", marginBottom:16, transition:"all .2s" }}
+            onMouseEnter={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.09)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.18)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background="rgba(255,255,255,0.05)"; e.currentTarget.style.borderColor="rgba(255,255,255,0.1)"; }}>
+            <svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+            Masuk dengan Google
+          </button>
+
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+            <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.07)" }} />
+            <span style={{ fontSize:11, color:"#e8eaf0", opacity:.3 }}>atau dengan email</span>
+            <div style={{ flex:1, height:1, background:"rgba(255,255,255,0.07)" }} />
+          </div>
+
+          <form onSubmit={handleSubmit} style={{ display:"flex", flexDirection:"column", gap:14 }}>
+            <div>
+              <label style={{ fontSize:11, fontWeight:700, color:"#e8eaf0", opacity:.5, display:"block", marginBottom:7, textTransform:"uppercase", letterSpacing:"0.08em" }}>Email</label>
+              <div className="inp-wrap">
+                <span className="inp-icon">✉</span>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email@kamu.com" autoComplete="email" />
+              </div>
+            </div>
+            <div>
+              <div style={{ display:"flex", justifyContent:"space-between", marginBottom:7 }}>
+                <label style={{ fontSize:11, fontWeight:700, color:"#e8eaf0", opacity:.5, textTransform:"uppercase", letterSpacing:"0.08em" }}>Password</label>
+                <span style={{ fontSize:11, color:A, opacity:.8, cursor:"pointer" }}>Lupa password?</span>
+              </div>
+              <div className="inp-wrap">
+                <span className="inp-icon">🔒</span>
+                <input type={showPass ? "text" : "password"} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" autoComplete="current-password" />
+                <button type="button" onClick={() => setShowPass(!showPass)} style={{ padding:"0 14px", background:"none", border:"none", cursor:"pointer", fontSize:14, opacity:.35, color:"#e8eaf0" }}>{showPass ? "🙈" : "👁"}</button>
+              </div>
             </div>
 
-            <h2 className="font-black hidden lg:block" style={{ fontSize: "1.9rem", color: "var(--text-main,#e8eaf0)", marginBottom: 6 }}>Selamat Datang</h2>
-            <p className="hidden lg:block" style={{ fontSize: 13, color: "var(--text-main,#e8eaf0)", opacity: 0.4, marginBottom: 28 }}>Masuk untuk lanjutkan belajar Bitcoin.</p>
+            {error && (
+              <div style={{ padding:"11px 14px", borderRadius:10, fontSize:12, background:"rgba(239,68,68,0.08)", border:"1px solid rgba(239,68,68,0.2)", color:"#f87171", display:"flex", alignItems:"center", gap:8 }}>
+                <span>⚠</span> {error}
+              </div>
+            )}
 
-            {/* Google */}
-            <button onClick={handleGoogle} style={{ width: "100%", padding: "11px", borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.09)", color: "var(--text-main,#e8eaf0)", marginBottom: 12, transition: "background .15s" }}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.08)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}>
-              <span style={{ fontWeight: 900, color: "#ea4335", fontSize: 15 }}>G</span> Masuk dengan Google
+            <button type="submit" disabled={loading} style={{ width:"100%", padding:"13px", borderRadius:12, fontSize:14, fontWeight:800, border:"none", marginTop:2, cursor:loading ? "not-allowed" : "pointer", background:loading ? `${A}30` : `linear-gradient(135deg, ${A}, #f97316)`, color:loading ? "rgba(0,0,0,0.4)" : "#000", boxShadow:loading ? "none" : `0 8px 24px ${A}35`, transition:"all .2s", letterSpacing:"-0.2px" }}>
+              {loading ? "Memproses..." : "Masuk Sekarang →"}
             </button>
+          </form>
 
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20 }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-              <span style={{ fontSize: 11, color: "var(--text-main,#e8eaf0)", opacity: 0.3 }}>atau email</span>
-              <div style={{ flex: 1, height: 1, background: "rgba(255,255,255,0.07)" }} />
-            </div>
-
-            <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-              <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-main,#e8eaf0)", opacity: 0.55, display: "block", marginBottom: 7, textTransform: "uppercase", letterSpacing: "0.07em" }}>Email</label>
-                <div className="converter-input" style={{ display: "flex", alignItems: "center" }}>
-                  <span style={{ paddingLeft: 14, fontSize: 14, opacity: 0.3, flexShrink: 0, color: "var(--text-main,#e8eaf0)" }}>✉</span>
-                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="email@kamu.com"
-                    style={{ flex: 1, background: "transparent", border: "none", padding: "13px 14px", fontSize: 14, color: "var(--text-main,#e8eaf0)" }} />
-                </div>
-              </div>
-              <div>
-                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 7 }}>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: "var(--text-main,#e8eaf0)", opacity: 0.55, textTransform: "uppercase", letterSpacing: "0.07em" }}>Password</label>
-                  <Link href="#" style={{ fontSize: 11, color: "var(--color-primary,#f59e0b)", textDecoration: "none", opacity: 0.8 }}>Lupa?</Link>
-                </div>
-                <div className="converter-input" style={{ display: "flex", alignItems: "center" }}>
-                  <span style={{ paddingLeft: 14, fontSize: 14, opacity: 0.3, flexShrink: 0, color: "var(--text-main,#e8eaf0)" }}>🔒</span>
-                  <input type={showPass ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"
-                    style={{ flex: 1, background: "transparent", border: "none", padding: "13px 14px", fontSize: 14, color: "var(--text-main,#e8eaf0)" }} />
-                  <button type="button" onClick={() => setShowPass(!showPass)} style={{ paddingRight: 14, background: "none", border: "none", cursor: "pointer", fontSize: 14, opacity: 0.35, color: "var(--text-main,#e8eaf0)" }}>{showPass ? "🙈" : "👁"}</button>
-                </div>
-              </div>
-
-              {error && <div style={{ padding: "10px 14px", borderRadius: 9, fontSize: 12, background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.22)", color: "#f87171" }}>⚠ {error}</div>}
-
-              <button type="submit" disabled={loading} style={{
-                width: "100%", padding: "13px", borderRadius: 11, fontSize: 14, fontWeight: 800, border: "none",
-                cursor: loading ? "not-allowed" : "pointer", marginTop: 2,
-                background: loading ? "rgba(245,158,11,0.28)" : "linear-gradient(135deg, var(--color-primary,#f59e0b), #f97316)",
-                color: loading ? "rgba(0,0,0,0.4)" : "#000",
-                boxShadow: loading ? "none" : "0 6px 20px color-mix(in srgb, var(--color-primary,#f59e0b) 28%, transparent)",
-              }}>
-                {loading ? "Memproses..." : "Masuk Sekarang →"}
-              </button>
-            </form>
-
-            <p style={{ textAlign: "center", marginTop: 22, fontSize: 13, color: "var(--text-main,#e8eaf0)", opacity: 0.45 }}>
-              Belum punya akun?{" "}
-              <Link href="/register" style={{ color: "var(--color-primary,#f59e0b)", fontWeight: 700, textDecoration: "none" }}>Daftar Gratis</Link>
-            </p>
-          </div>
+          <p style={{ textAlign:"center", marginTop:24, fontSize:13, color:"#e8eaf0", opacity:.45 }}>
+            Belum punya akun?{" "}
+            <Link href="/register" style={{ color:A, fontWeight:700, textDecoration:"none" }}>Daftar Gratis</Link>
+          </p>
         </div>
-      </main>
-    </>
+      </div>
+    </div>
   );
 }
